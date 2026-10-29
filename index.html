@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SyntaxForge | Syntax Tree & ICG System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c1a; --card:rgba(255,255,255,.04); --line:rgba(255,255,255,.09);
+  --text:#e6e9f5; --muted:#8b93b0;
+  --a1:#6366f1; --a2:#22d3ee;
+  --kw:#a78bfa; --id:#22d3ee; --num:#fbbf24; --op:#f472b6; --pu:#94a3b8;
+  --ok:#34d399; --bad:#f87171;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; color:var(--text); font-family:Inter,Segoe UI,sans-serif; min-height:100vh;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(99,102,241,.25), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(34,211,238,.16), transparent 60%),
+    var(--bg);
+}
+.wrap{max-width:1250px;margin:0 auto;padding:28px 22px 40px}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-weight:700;font-size:20px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 8px 30px rgba(99,102,241,.45)}
+h1{margin:0;font-size:22px;letter-spacing:-.3px;font-weight:700}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.badge{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted)}
+
+/* pipeline */
+.pipeline{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.step{position:relative;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;transition:.3s}
+.step .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.07);color:var(--muted);transition:.3s}
+.step b{display:block;font-size:13px}.step small{color:var(--muted);font-size:11.5px}
+.step.done{border-color:rgba(52,211,153,.45);box-shadow:0 0 24px rgba(52,211,153,.12)}
+.step.done .num{background:var(--ok);color:#052e1c}
+.step.fail{border-color:rgba(248,113,113,.5)}
+.step.fail .num{background:var(--bad);color:#3b0a0a}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.card h3{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);
+  display:flex;align-items:center;gap:8px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2))}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+@media(max-width:900px){.grid,.pipeline{grid-template-columns:1fr}}
+
+/* editor */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+select{background:#11172e;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:13px Inter;outline:none}
+textarea{width:100%;height:150px;resize:vertical;background:#0a0f22;color:#dbe3ff;border:1px solid var(--line);
+  border-radius:12px;padding:14px;font:14px/1.6 'JetBrains Mono',Consolas,monospace;outline:none;transition:.2s}
+textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:9px 16px;border-radius:10px;
+  font:600 13px Inter;cursor:pointer;transition:.2s}
+button:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+button.primary{border:none;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;
+  box-shadow:0 6px 22px rgba(99,102,241,.45)}
+button.primary:hover{box-shadow:0 8px 28px rgba(34,211,238,.45)}
+.hint{color:var(--muted);font-size:12px;margin-left:auto}
+#error{margin-top:12px;display:none;padding:12px 14px;border-radius:10px;font:13px 'JetBrains Mono',monospace;
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:#fecaca;white-space:pre-wrap}
+
+/* stats */
+.stats{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.stat{flex:1;min-width:110px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.stat b{font-size:20px;display:block}.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+/* tokens */
+.scroll{max-height:340px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:6px 8px;
+  position:sticky;top:0;background:#0d1226}
+td{padding:7px 8px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font:600 11px Inter;border:1px solid}
+.KEYWORD{color:var(--kw);border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.12)}
+.ID{color:var(--id);border-color:rgba(34,211,238,.4);background:rgba(34,211,238,.12)}
+.NUM{color:var(--num);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.12)}
+.OP{color:var(--op);border-color:rgba(244,114,182,.4);background:rgba(244,114,182,.12)}
+.PUNCT{color:var(--pu);border-color:rgba(148,163,184,.4);background:rgba(148,163,184,.1)}
+
+/* TAC */
+.tac{font:13.5px/1.9 'JetBrains Mono',monospace;margin:0}
+.tac .ln{color:#4b5478;display:inline-block;width:28px;user-select:none}
+.tac .t{color:var(--id)}.tac .k{color:var(--kw);font-weight:500}.tac .l{color:var(--num)}.tac .o{color:var(--op)}
+.empty{color:var(--muted);font-size:13px}
+
+/* tree */
+#tree{overflow:auto;padding:6px;text-align:center}
+#tree svg{max-width:none}
+.edge{fill:none;stroke:rgba(148,163,184,.45);stroke-width:1.6}
+.node rect{stroke-width:1.5}
+.node text{fill:#fff;font:600 12px 'JetBrains Mono',monospace;text-anchor:middle}
+.node{animation:pop .5s ease both}
+@keyframes pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.node.kw rect{fill:rgba(167,139,250,.2);stroke:var(--kw)}
+.node.id rect{fill:rgba(34,211,238,.18);stroke:var(--id)}
+.node.num rect{fill:rgba(251,191,36,.18);stroke:var(--num)}
+.node.op rect{fill:rgba(244,114,182,.2);stroke:var(--op)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:10px;justify-content:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+
+#toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,30px);opacity:0;padding:11px 20px;border-radius:12px;
+  background:linear-gradient(135deg,var(--a1),var(--a2));font:600 13px Inter;transition:.3s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="logo">S</div>
+    <div>
+      <h1>SyntaxForge</h1>
+      <div class="sub">Web-Based Syntax Tree Construction &amp; Intermediate Code Generation System</div>
+    </div>
+  </div>
+  <span class="badge">Lexer → Parser → AST → TAC</span>
+</header>
+
+<div class="pipeline">
+  <div class="step" id="step1"><div class="num">1</div><div><b>Lexical Analysis</b><small>Source input &amp; tokens</small></div></div>
+  <div class="step" id="step2"><div class="num">2</div><div><b>Syntax Tree</b><small>Construction &amp; validation</small></div></div>
+  <div class="step" id="step3"><div class="num">3</div><div><b>Code Generation</b><small>Three-address code</small></div></div>
+</div>
+
+<div class="card">
+  <h3><span class="dot"></span>Source Code Input</h3>
+  <div class="toolbar">
+    <select id="samples">
+      <option value="x = a + b * 2;">Simple assignment</option>
+      <option value="if (a < b) { x = a + 1; } else { x = b - 1; }">If / else</option>
+      <option value="while (i < 10) { s = s + i; i = i + 1; }">While loop</option>
+      <option value="r = (a + b) * (c - d) / 2;">Parentheses</option>
+      <option value="while (i < n) { if (i == 5) { f = f * i; } i = i + 1; }">Nested if in while</option>
+    </select>
+    <button class="primary" id="run">▶ Analyze</button>
+    <button id="copy">Copy TAC</button>
+    <button id="download">Download TAC</button>
+    <span class="hint">Ctrl + Enter to run</span>
+  </div>
+  <textarea id="editor" spellcheck="false">x = a + b * 2;</textarea>
+  <div id="error"></div>
+  <div class="stats">
+    <div class="stat"><b id="st-tok">0</b><span>Tokens</span></div>
+    <div class="stat"><b id="st-node">0</b><span>Tree nodes</span></div>
+    <div class="stat"><b id="st-tac">0</b><span>TAC lines</span></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card"><h3><span class="dot"></span>Module 1 · Tokens</h3><div class="scroll" id="tokens"><div class="empty">Run the analyzer to see tokens.</div></div></div>
+  <div class="card"><h3><span class="dot"></span>Module 3 · Three-Address Code</h3><div class="scroll"><pre class="tac" id="tac"><span class="empty">No output yet.</span></pre></div></div>
+</div>
+
+<div class="card">
+  <h3><span class="dot"></span>Module 2 · Syntax Tree</h3>
+  <div id="tree"><div class="empty">Run the analyzer to see the tree.</div></div>
+  <div class="legend">
+    <span><i style="background:#a78bfa"></i>Structure</span>
+    <span><i style="background:#f472b6"></i>Operator</span>
+    <span><i style="background:#22d3ee"></i>Identifier</span>
+    <span><i style="background:#fbbf24"></i>Number</span>
+  </div>
+</div>
+
+<footer>Compiler Design Mini Project · Built with HTML, CSS &amp; JavaScript</footer>
+</div>
+<div id="toast"></div>
+
+<script src="lexer.js"></script>
+<script src="parser.js"></script>
+<script src="codegen.js"></script>
+<script src="render.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

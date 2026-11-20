@@ -88,6 +88,7 @@ td{padding:7px 8px;border-top:1px solid var(--line);font-family:'JetBrains Mono'
 .OP{color:var(--op);border-color:rgba(244,114,182,.4);background:rgba(244,114,182,.12)}
 .PUNCT{color:var(--pu);border-color:rgba(148,163,184,.4);background:rgba(148,163,184,.1)}
 
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer}
 /* TAC */
 .tac{font:13.5px/1.9 'JetBrains Mono',monospace;margin:0}
 .tac .ln{color:#4b5478;display:inline-block;width:28px;user-select:none}
@@ -145,10 +146,15 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
       <option value="while (i < 10) { s = s + i; i = i + 1; }">While loop</option>
       <option value="r = (a + b) * (c - d) / 2;">Parentheses</option>
       <option value="while (i < n) { if (i == 5) { f = f * i; } i = i + 1; }">Nested if in while</option>
+      <option value="for (i = 0; i <= 5; i = i + 1) { s = s + i; }">For loop</option>
+      <option value="if (a < b) { m = a; } else if (a == b) { m = 0; } else { m = -b; }">Else-if + unary minus</option>
+      <option value="if (a >= 1 &amp;&amp; b <= 9 || c != 0) { r = -a; }">Logical operators</option>
+      <option value="x = 2 * 3 + a * (4 - 4 / 2);">Folding demo (tick Constant folding)</option>
     </select>
     <button class="primary" id="run">▶ Analyze</button>
     <button id="copy">Copy TAC</button>
     <button id="download">Download TAC</button>
+    <label class="chk"><input type="checkbox" id="fold"> Constant folding</label>
     <span class="hint">Ctrl + Enter to run</span>
   </div>
   <textarea id="editor" spellcheck="false">x = a + b * 2;</textarea>
@@ -157,6 +163,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
     <div class="stat"><b id="st-tok">0</b><span>Tokens</span></div>
     <div class="stat"><b id="st-node">0</b><span>Tree nodes</span></div>
     <div class="stat"><b id="st-tac">0</b><span>TAC lines</span></div>
+    <div class="stat"><b id="st-fold">0</b><span>Folded</span></div>
   </div>
 </div>
 
@@ -165,7 +172,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
   <div class="card"><h3><span class="dot"></span>Module 3 · Three-Address Code</h3><div class="scroll"><pre class="tac" id="tac"><span class="empty">No output yet.</span></pre></div></div>
 </div>
 
+<div class="grid">
+  <div class="card"><h3><span class="dot"></span>Quadruples</h3><div class="scroll" id="quads"><div class="empty">Nothing yet.</div></div></div>
+  <div class="card"><h3><span class="dot"></span>Triples</h3><div class="scroll" id="triples"><div class="empty">Nothing yet.</div></div></div>
+</div>
+
 <div class="card">
+  <h3><span class="dot"></span>Symbol Table</h3>
+  <div class="scroll" id="symbols"><div class="empty">Nothing yet.</div></div>
+</div>
+
+<div class="card" style="margin-top:18px">
   <h3><span class="dot"></span>Module 2 · Syntax Tree</h3>
   <div id="tree"><div class="empty">Run the analyzer to see the tree.</div></div>
   <div class="legend">
@@ -184,6 +201,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
 <script src="parser.js"></script>
 <script src="codegen.js"></script>
 <script src="render.js"></script>
+<script src="semantic.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

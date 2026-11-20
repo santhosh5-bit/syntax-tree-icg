@@ -3,6 +3,7 @@ function toTree(n){
     case 'Program': return {label:'Program', kind:'kw', children:n.body.map(toTree)};
     case 'Assign':  return {label:'=', kind:'op', children:[{label:n.name,kind:'id',children:[]}, toTree(n.expr)]};
     case 'BinOp':   return {label:n.op, kind:'op', children:[toTree(n.left), toTree(n.right)]};
+    case 'Unary':   return {label:n.op, kind:'op', children:[toTree(n.operand)]};
     case 'Num':     return {label:n.value, kind:'num', children:[]};
     case 'Id':      return {label:n.value, kind:'id', children:[]};
     case 'If': {
@@ -10,6 +11,8 @@ function toTree(n){
       if(n.else) c.push({label:'else',kind:'kw',children:n.else.map(toTree)});
       return {label:'if', kind:'kw', children:c};
     }
+    case 'For':
+      return {label:'for', kind:'kw', children:[toTree(n.init), toTree(n.cond), toTree(n.update), {label:'body',kind:'kw',children:n.body.map(toTree)}]};
     case 'While':
       return {label:'while', kind:'kw', children:[toTree(n.cond), {label:'body',kind:'kw',children:n.body.map(toTree)}]};
   }

@@ -25,13 +25,26 @@ function highlight(line){
   s = s.replace(/\b(ifFalse|goto)\b/g, '<span class="k">$1</span>');
   s = s.replace(/\b(t\d+)\b/g, '<span class="t">$1</span>');
   s = s.replace(/(?<![\w])(L\d+)(?![\w:])/g, '<span class="l">$1</span>');
-  s = s.replace(/ (\+|-|\*|\/|==|!=|&lt;|&gt;|=) /g, ' <span class="o">$1</span> ');
+  s = s.replace(/ (\+|-|\*|\/|==|!=|&lt;=|&gt;=|&lt;|&gt;|&amp;&amp;|\|\||=) /g, ' <span class="o">$1</span> ');
   return s;
 }
 function showTAC(code){
   currentTAC = code;
   $('tac').innerHTML = code.map((c,i)=>`<span class="ln">${i+1}</span>${highlight(c)}`).join('\n');
   $('st-tac').textContent = code.length;
+}
+function table(head, rows){
+  return '<table><tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' +
+    rows.map(r=>'<tr>' + r.map(c=>`<td>${esc(c===''?'-':c)}</td>`).join('') + '</tr>').join('') + '</table>';
+}
+function showQuadsTriples(out){
+  $('quads').innerHTML   = table(['#','Op','Arg1','Arg2','Result'], out.quads.map((x,i)=>[i,x.op,x.a1,x.a2,x.res]));
+  $('triples').innerHTML = table(['#','Op','Arg1','Arg2'], out.triples.map((x,i)=>[i,x.op,x.a1,x.a2]));
+}
+function showSymbols(list){
+  $('symbols').innerHTML = list.length
+    ? table(['Name','Assigned','Used','Note'], list.map(s=>[s.name,s.assigns,s.uses,s.note]))
+    : '<div class="empty">No variables.</div>';
 }
 function resetOutput(){
   showError('');
@@ -40,6 +53,8 @@ function resetOutput(){
   $('tree').innerHTML = '<div class="empty">No tree.</div>';
   $('tac').innerHTML = '<span class="empty">No output.</span>';
   $('st-tok').textContent = $('st-node').textContent = $('st-tac').textContent = 0;
+  ['quads','triples','symbols'].forEach(id => $(id).innerHTML = '<div class="empty">Nothing yet.</div>');
+  $('st-fold').textContent = 0;
   currentTAC = [];
 }
 
@@ -58,7 +73,9 @@ function analyze(){
   } catch(e){ setStep(2,'fail'); showError('Syntax error: ' + e.message); return; }
 
   try {
-    showTAC(generate(ast));                                 // Module 3
+    const out = generate(ast, {fold: $('fold').checked});   // Module 3
+    showTAC(out.tac); showQuadsTriples(out); showSymbols(analyzeSymbols(ast));
+    $('st-fold').textContent = out.folded;
     setStep(3,'done');
   } catch(e){ setStep(3,'fail'); showError('Code generation error: ' + e.message); }
 }
@@ -77,3 +94,4 @@ $('download').onclick = () => {
   a.download = 'tac.txt'; a.click();
   toast('TAC downloaded');
 };
+$('fold').onchange = analyze;
